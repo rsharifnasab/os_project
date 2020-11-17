@@ -76,7 +76,7 @@ bool takeASeat(struct user* me)
     int startLookingTime = getCurrentTime();
     sem_wait(&seat_mutex);
     int endLookingTime = getCurrentTime();
-    if (startLookingTime != endLookingTime) {
+    if (startLookingTime != endLookingTime) { // hamun moghe ja khali nabude
         // there is no seat. leave building
         sem_post(&seat_mutex);
         printStats(me);

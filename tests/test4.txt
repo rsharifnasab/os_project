@@ -1,0 +1,4 @@
+cure failed for user "user2" [arrival:1] 
+cure failed for user "user1" [arrival:1] 
+cure failed for user "user3" [arrival:2] 
+cure failed for user "user4" [arrival:4] 

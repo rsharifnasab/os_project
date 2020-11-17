@@ -15,7 +15,7 @@ help:
 	@echo "run demo with 'make demo'"
 
 %.out: $(SRCS)
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $*.c
 
 compile: $(EXECS)
 
@@ -28,4 +28,4 @@ demo: $(DEMO_EXE)
 clean:
 	@rm $(EXECS) || true
 
-
+.PHONY=clean. demo, test. help

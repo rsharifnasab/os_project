@@ -3,6 +3,7 @@
 
 #define STR_BUFF_SIZE 200
 #define CURE_TIME 2
+#define IS_MULTI_PROCESS 0
 
 struct user {
     char name[STR_BUFF_SIZE];
@@ -26,10 +27,15 @@ void cureDone(struct user u)
     printf("cure done for user \"%s\" (from %d to %d)\n", u.name, u.arrivalTime, u.arrivalTime + CURE_TIME);
 }
 
+sem_t mutex;
+
 int main()
 {
+    sem_init(&mutex, IS_MULTI_PROCESS, 1);
     for (int i = 0; i < totalUsers; ++i) {
         cureDone(users[i]);
     }
+
+    sem_destroy(&mutex);
     return 0;
 }

@@ -18,7 +18,7 @@ struct user {
     pthread_t thread;
 };
 
-const int n = 1; // no of doctors
+const int n = 2; // no of doctors
 const int m = 1; // buffer size
 
 struct user users[] = {
@@ -80,7 +80,6 @@ bool takeASeat(struct user* me)
         // there is no seat. leave building
         sem_post(&seat_mutex);
         printStats(me);
-        //pthread_exit(&(me->thread));
         return false;
     }
     return true;
@@ -105,14 +104,17 @@ void waitForDoctor(){
     sem_wait(&doctor_mutex);
 }
 
+void handleArrival(struct user* me){
+    sleep(me->arrivalTime);
+}
+
 void* userThread(void* arg)
 {
     int ind = *((int*)arg);
     struct user* me = &users[ind];
+    handleArrival(me);
 
-    sleep(me->arrivalTime);
-    bool result = takeASeat(me);
-    if(!result){
+    if(!takeASeat(me)){
         return NULL;
     }
 

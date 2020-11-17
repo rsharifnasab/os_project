@@ -14,10 +14,11 @@ struct user {
     int arrivalTime;
     int startCure;
     int doneCure;
+    pthread_t thread;
 };
 
-const int n = 2; // consumers count
-const int m = 5; // buffer size
+const int n = 1; // no of doctors
+const int m = 1; // buffer size
 
 struct user users[] = {
     { "user1", 1 },
@@ -32,7 +33,12 @@ unsigned long programStart;
 
 void printStats(struct user* u)
 {
-    printf("cure done for user \"%s\" [arrival:%d] (cure from %d to %d)\n", u->name, u->arrivalTime, u->startCure, u->doneCure);
+    if (u->doneCure == 0) {
+        // left building
+        printf("cure failed for user \"%s\" [arrival:%d] \n", u->name, u->arrivalTime);
+    } else {
+        printf("cure done for user \"%s\" [arrival:%d] (cure from %d to %d)\n", u->name, u->arrivalTime, u->startCure, u->doneCure);
+    }
 }
 
 int getCurrentTime()
@@ -41,16 +47,51 @@ int getCurrentTime()
     return l;
 }
 
-sem_t mutex;
+void* userThread(void* arg);
+void createThreads(struct user* users, int totalUsers)
+{
+    for (int i = 0; i < totalUsers; ++i) {
+        int* arrivalTime = calloc(1, sizeof(int));
+        *arrivalTime = i;
+        pthread_create(&(users[i].thread), NULL, userThread, arrivalTime);
+    }
+}
+
+void joinThreads(struct user* users, int totalUsers)
+{
+    for (int i = 0; i < totalUsers; ++i) {
+        pthread_join(users[i].thread, NULL);
+    }
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+sem_t seat_mutex;
+sem_t doctor_mutex;
+
+void takeASeat(struct user* me)
+{
+    int startLookingTime = getCurrentTime();
+    sem_wait(&seat_mutex);
+    int endLookingTime = getCurrentTime();
+    if (startLookingTime != endLookingTime) {
+        // there is no seat. leave building
+        sem_post(&seat_mutex);
+        pthread_exit(&(me->thread));
+        printStats(me);
+    }
+}
+
 void* userThread(void* arg)
 {
     int ind = *((int*)arg);
     struct user* me = &users[ind];
 
     sleep(me->arrivalTime);
+    takeASeat(me);
 
     //wait
-    sem_wait(&mutex);
+    sem_wait(&doctor_mutex);
     me->startCure = getCurrentTime();
 
     //critical section
@@ -59,37 +100,19 @@ void* userThread(void* arg)
     //signal
     me->doneCure = getCurrentTime();
     printStats(me);
-    sem_post(&mutex);
+    sem_post(&doctor_mutex);
     return NULL;
-}
-
-pthread_t* createThreads(int totalUsers)
-{
-    pthread_t* userThreads = (pthread_t*)calloc(totalUsers, sizeof(pthread_t));
-    for (int i = 0; i < totalUsers; ++i) {
-        int* arrivalTime = calloc(1, sizeof(int));
-        *arrivalTime = i;
-        pthread_create(&(userThreads[i]), NULL, userThread, arrivalTime);
-    }
-    return userThreads;
-}
-
-void joinThreads(pthread_t* threadsToJoin, int totalUsers)
-{
-    for (int i = 0; i < totalUsers; ++i) {
-        pthread_join(threadsToJoin[i], NULL);
-    }
 }
 
 int main()
 {
     programStart = (unsigned long)time(NULL);
-    sem_init(&mutex, IS_MULTI_PROCESS, n);
+    sem_init(&seat_mutex, IS_MULTI_PROCESS, m);
+    sem_init(&doctor_mutex, IS_MULTI_PROCESS, n);
 
-    pthread_t* userThreads = createThreads(totalUsers);
-    joinThreads(userThreads, totalUsers);
+    createThreads(users, totalUsers);
+    joinThreads(users, totalUsers);
 
-    sem_destroy(&mutex);
-    free(userThreads);
+    sem_destroy(&doctor_mutex);
     return 0;
 }

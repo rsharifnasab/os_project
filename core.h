@@ -1,3 +1,5 @@
+#pragma once
+
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
@@ -20,35 +22,33 @@ struct user {
     pthread_t thread;
 };
 
-const int n = 1; // no of doctors
-const int m = 1; // buffer size
+extern int n; // no of doctors
+extern int m; // buffer size
 
-struct user users[] = {
-    { "user1", 1 },
-    { "user2", 1 },
-    { "user3", 2 },
-    { "user4", 4 },
-};
+extern struct user users[];
+extern int totalUsers;
 
-const int totalUsers = sizeof(users) / sizeof(struct user);
 
 unsigned long programStart;
+
+bool colorPrint = false;
 
 void printStats(struct user* u)
 {
     if (u->doneCure == 0) {
         // left building
-#if PRESENT
-        change_color(COLOR_RED);
-#endif
+        if (colorPrint)
+            change_color(COLOR_RED);
         printf("cure failed for user \"%s\" [arrival:%d] \n", u->name, u->arrivalTime);
-        reset_color();
+        if (colorPrint)
+            reset_color();
     } else {
-#if PRESENT
-        change_color(COLOR_GREEN);
-#endif
-        printf("cure done for user \"%s\" [arrival:%d] (cure from %d to %d)\n", u->name, u->arrivalTime, u->startCure, u->doneCure);
-        reset_color();
+        if (colorPrint)
+            change_color(COLOR_GREEN);
+        printf("cure done for user \"%s\" [arrival:%d] (cure from %d to %d)\n",
+                u->name, u->arrivalTime, u->startCure, u->doneCure);
+        if (colorPrint)
+            reset_color();
     }
 }
 
@@ -59,10 +59,11 @@ int getCurrentTime()
 }
 
 void* userThread(void* arg);
+
 void createThreads(struct user* users, int totalUsers)
 {
     for (int i = 0; i < totalUsers; ++i) {
-        int* arrivalTime = calloc(1, sizeof(int));
+        int* arrivalTime = (int*) calloc(1, sizeof(int));
         *arrivalTime = i;
         pthread_create(&(users[i].thread), NULL, userThread, arrivalTime);
     }
@@ -85,7 +86,6 @@ sem_t doctorMutex;
 
 bool takeASeat(struct user* me)
 {
-    bool success = false;
     sem_wait(&seatCountMutex); // lock seat_count
     if (freeSeats == 0) {
         // there is no seat. leave building
@@ -100,14 +100,13 @@ bool takeASeat(struct user* me)
         sem_post(&seatCountMutex); // unlock seat_count
         return true;
     }
-
 }
 
 void goToDrRoom(struct user* me)
 {
     sem_wait(&seatCountMutex); // lock seat_count
     freeSeats++;
-    sem_post(&seatMutex); // ba'd inke vared doctor shodi az jat pasho
+    sem_post(&seatMutex);      // ba'd inke vared doctor shodi az jat pasho
     sem_post(&seatCountMutex); // unlock seat_count
     me->startCure = getCurrentTime();
 }
@@ -152,19 +151,24 @@ void* userThread(void* arg)
     return NULL;
 }
 
-int main()
+void run()
 {
-    programStart = (unsigned long)time(NULL);
 
+    colorPrint = isatty(fileno(stdout));
+
+    // initialize semaphores
     freeSeats = m;
     sem_init(&seatCountMutex, IS_MULTI_PROCESS, 1);
     sem_init(&seatMutex, IS_MULTI_PROCESS, m);
     sem_init(&doctorMutex, IS_MULTI_PROCESS, n);
 
+    programStart = (unsigned long)time(NULL);
+
+    // run threads
     createThreads(users, totalUsers);
     joinThreads(users, totalUsers);
 
     sem_destroy(&doctorMutex);
     sem_destroy(&seatMutex);
-    return 0;
 }
+

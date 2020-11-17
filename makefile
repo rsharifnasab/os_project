@@ -1,16 +1,28 @@
 CC=gcc
-CFLAGS=-lpthread -lrt -O0
+CFLAGS=-lpthread -lrt -O0 -Wall
 
-all: compile run clean
+PRESENT_MODE=-D PRESENT
+
+.DEFAULT_GOAL:=all
+
+TESTS := $(wildcard test*.c)
+
+help:
+	@echo "welcome"
+
+compile_tests =  $(TESTS:%.c=%.out)
 
 
-compile:
-	@$(CC) main.c -o main.out $(CFLAGS) -D PRESENT 
+#	@$(CC) main.c -o main.out $(CFLAGS) $(PRESENT_MODE)
+
+compile: $(compile_tests)
+
+	#@$(CC) main.c -o main.out $(CFLAGS)
 
 run:
 	@./main.out
 
 clean:
-	@rm *.out
+	@rm *.out || true
 
-.PHONY: clean, compile, all
+

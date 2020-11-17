@@ -8,14 +8,14 @@ help:
 	@echo "run tests with 'make tests'"
 	@echo "run demo with 'make demo'"
 
-TESTS := $(wildcard test*.c)
-COMPILE_TESTS =  $(TESTS:%.c=%.out)
-compile_test: $(COMPILE_TESTS)
+TESTS = $(wildcard test*.c)
+EXECS = $(TESTS:%.c=%)
+compile_test: $(EXECS)
 
-test: compile_test
-	@mkdir tmp
-	@./tester.py || echo "error in tests"
-#	@rm -r ./tmp || echo "no test folder"
+test: clean compile_test
+	@mkdir tmp 
+	@./tester.py || true
+	@rm -r ./tmp || echo "no test folder"
 	
 # # # # # # # # # # # # # # #
 
@@ -29,6 +29,7 @@ run_demo:
 # # # # # # # # # # # # # # #
 
 clean:
-	@rm *.out || true
+	@rm $(EXECS) || true
+	@rm -r tmp || true
 
 

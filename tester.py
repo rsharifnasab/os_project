@@ -25,12 +25,11 @@ def get_last_file_number():
     files.sort(key=file_name_2_number)
     last_file = files[-1] if len(files) > 0 else "test0.c"  # empty
     last_num = file_name_2_number(last_file)
-    print(f"last test is: {last_num}")
     return last_num
 
 
 def execute(i):
-    prog = f"{BIN_FILES}/test{i}.out"
+    prog = f"./test{i}"
     expected = f"{EXPECTED_FILES}/out{i}.txt"
 
     result = f"{TMP_FILES}/out{i}.tmp"

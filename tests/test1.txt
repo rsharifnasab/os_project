@@ -1,1 +1,4 @@
-salam
+cure failed for user "user3" [arrival:2] 
+cure done for user "user2" [arrival:1] (cure from 1 to 3)
+cure done for user "user1" [arrival:1] (cure from 3 to 5)
+cure done for user "user4" [arrival:4] (cure from 5 to 7)

@@ -136,5 +136,6 @@ int main()
     joinThreads(users, totalUsers);
 
     sem_destroy(&doctor_mutex);
+    sem_destroy(&seat_mutex);
     return 0;
 }

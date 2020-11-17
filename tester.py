@@ -10,10 +10,10 @@ from filecmp import cmp
 
 from re import findall
 from random import randint as rnd
+from multiprocessing import Process
 
 EXPECTED_FILES = "./tests"
 TMP_FILES = "./tmp"
-BIN_FILES = "./bin"
 
 def file_name_2_number(file_name):
     name = file_name.split(".")[0]
@@ -29,19 +29,22 @@ def get_last_file_number():
 
 
 def execute(i):
+    print(f"- - - i:{i} - - - ")
+
     prog = f"./test{i}"
-    expected = f"{EXPECTED_FILES}/out{i}.txt"
+    expected = f"{EXPECTED_FILES}/test{i}.txt"
 
     result = f"{TMP_FILES}/out{i}.tmp"
 
     shell(f"{prog} > {result}")
+    #print(f"checking {result} and {expected}")
     assert isfile(result), f"tests{i} doesnt make output"
     assert cmp(result, expected), f"error in test{i}"
+
 
 if __name__ == "__main__":
     start_index = 1
     end_index = get_last_file_number()
 
     for i in range(start_index, end_index+1):
-        print(f"- - - i:{i} - - - ")
         execute(i)

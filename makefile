@@ -1,16 +1,16 @@
 CC=gcc
 CFLAGS=-lpthread -lrt -O0
 
-all: compile run
+all: compile run clean
 
 
 compile:
-	$(CC) main.c -o main.out $(CFLAGS)
+	@$(CC) main.c -o main.out $(CFLAGS)
 
 run:
-	./main.out
+	@./main.out
 
 clean:
-	rm *.out
+	@rm *.out
 
 .PHONY: clean, compile, all

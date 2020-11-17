@@ -9,13 +9,13 @@ help:
 	@echo "run demo with 'make demo'"
 
 TESTS := $(wildcard test*.c)
-COMPILE_TESTS =  $(TESTS:%.c=%)
+COMPILE_TESTS =  $(TESTS:%.c=%.out)
 compile_test: $(COMPILE_TESTS)
 
 test: compile_test
 	@mkdir tmp
 	@./tester.py || echo "error in tests"
-	@rm -r ./tmp || echo "no test folder"
+#	@rm -r ./tmp || echo "no test folder"
 	
 # # # # # # # # # # # # # # #
 

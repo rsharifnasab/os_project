@@ -18,7 +18,7 @@ struct user {
     pthread_t thread;
 };
 
-const int n = 2; // no of doctors
+const int n = 1; // no of doctors
 const int m = 1; // buffer size
 
 struct user users[] = {
@@ -61,50 +61,65 @@ void createThreads(struct user* users, int totalUsers)
 void joinThreads(struct user* users, int totalUsers)
 {
     for (int i = 0; i < totalUsers; ++i) {
-        printf("joining %d\n", i);
+        //printf("joining %d\n", i);
         pthread_join(users[i].thread, NULL);
     }
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-sem_t seat_mutex;
-sem_t doctor_mutex;
+int freeSeats;
+sem_t seatCountMutex;
+sem_t seatMutex;
+sem_t doctorMutex;
 
 bool takeASeat(struct user* me)
 {
-    int startLookingTime = getCurrentTime();
-    sem_wait(&seat_mutex);
-    int endLookingTime = getCurrentTime();
-    if (startLookingTime != endLookingTime) { // hamun moghe ja khali nabude
+    bool success = false;
+    sem_wait(&seatCountMutex); // lock seat_count
+    if (freeSeats == 0) {
         // there is no seat. leave building
-        sem_post(&seat_mutex);
         printStats(me);
-        return false;
+        success = false;
+        goto ret;
+    } else {
+        freeSeats--;
+        sem_wait(&seatMutex);
+        success = true;
+        goto ret;
     }
-    return true;
+
+ret:
+    sem_post(&seatCountMutex); // lock seat_count
+    return success;
 }
 
-void goToDrRoom(struct user* me){
-    sem_post(&seat_mutex); // ba'd inke vared doctor shodi az jat pasho
+void goToDrRoom(struct user* me)
+{
+    freeSeats++;
+    sem_post(&seatMutex); // ba'd inke vared doctor shodi az jat pasho
     me->startCure = getCurrentTime();
 }
 
-void leaveDrRoom(struct user* me){
+void leaveDrRoom(struct user* me)
+{
     me->doneCure = getCurrentTime();
     printStats(me);
-    sem_post(&doctor_mutex);
+    sem_post(&doctorMutex);
 }
 
-void cure(){
+void cure()
+{
     sleep(CURE_TIME);
 }
 
-void waitForDoctor(){
-    sem_wait(&doctor_mutex);
+void waitForDoctor()
+{
+    sem_wait(&doctorMutex);
 }
 
-void handleArrival(struct user* me){
+void handleArrival(struct user* me)
+{
     sleep(me->arrivalTime);
 }
 
@@ -114,7 +129,7 @@ void* userThread(void* arg)
     struct user* me = &users[ind];
     handleArrival(me);
 
-    if(!takeASeat(me)){
+    if (!takeASeat(me)) {
         return NULL;
     }
 
@@ -129,13 +144,16 @@ void* userThread(void* arg)
 int main()
 {
     programStart = (unsigned long)time(NULL);
-    sem_init(&seat_mutex, IS_MULTI_PROCESS, m);
-    sem_init(&doctor_mutex, IS_MULTI_PROCESS, n);
+
+    freeSeats = m;
+    sem_init(&seatCountMutex, IS_MULTI_PROCESS, 1);
+    sem_init(&seatMutex, IS_MULTI_PROCESS, m);
+    sem_init(&doctorMutex, IS_MULTI_PROCESS, n);
 
     createThreads(users, totalUsers);
     joinThreads(users, totalUsers);
 
-    sem_destroy(&doctor_mutex);
-    sem_destroy(&seat_mutex);
+    sem_destroy(&doctorMutex);
+    sem_destroy(&seatMutex);
     return 0;
 }

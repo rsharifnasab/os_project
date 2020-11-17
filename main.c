@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -60,6 +61,7 @@ void createThreads(struct user* users, int totalUsers)
 void joinThreads(struct user* users, int totalUsers)
 {
     for (int i = 0; i < totalUsers; ++i) {
+        printf("joining %d\n", i);
         pthread_join(users[i].thread, NULL);
     }
 }
@@ -69,7 +71,7 @@ void joinThreads(struct user* users, int totalUsers)
 sem_t seat_mutex;
 sem_t doctor_mutex;
 
-void takeASeat(struct user* me)
+bool takeASeat(struct user* me)
 {
     int startLookingTime = getCurrentTime();
     sem_wait(&seat_mutex);
@@ -77,9 +79,30 @@ void takeASeat(struct user* me)
     if (startLookingTime != endLookingTime) {
         // there is no seat. leave building
         sem_post(&seat_mutex);
-        pthread_exit(&(me->thread));
         printStats(me);
+        //pthread_exit(&(me->thread));
+        return false;
     }
+    return true;
+}
+
+void goToDrRoom(struct user* me){
+    sem_post(&seat_mutex); // ba'd inke vared doctor shodi az jat pasho
+    me->startCure = getCurrentTime();
+}
+
+void leaveDrRoom(struct user* me){
+    me->doneCure = getCurrentTime();
+    printStats(me);
+    sem_post(&doctor_mutex);
+}
+
+void cure(){
+    sleep(CURE_TIME);
+}
+
+void waitForDoctor(){
+    sem_wait(&doctor_mutex);
 }
 
 void* userThread(void* arg)
@@ -88,19 +111,16 @@ void* userThread(void* arg)
     struct user* me = &users[ind];
 
     sleep(me->arrivalTime);
-    takeASeat(me);
+    bool result = takeASeat(me);
+    if(!result){
+        return NULL;
+    }
 
-    //wait
-    sem_wait(&doctor_mutex);
-    me->startCure = getCurrentTime();
+    waitForDoctor();
+    goToDrRoom(me);
+    cure(); //critical section
+    leaveDrRoom(me);
 
-    //critical section
-    sleep(CURE_TIME);
-
-    //signal
-    me->doneCure = getCurrentTime();
-    printStats(me);
-    sem_post(&doctor_mutex);
     return NULL;
 }
 

@@ -2,6 +2,7 @@
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 
 #define STR_BUFF_SIZE 200
@@ -11,6 +12,8 @@
 struct user {
     char name[STR_BUFF_SIZE];
     int arrivalTime;
+    int startCure;
+    int doneCure;
 };
 
 const int n = 2; // consumers count
@@ -25,29 +28,37 @@ struct user users[] = {
 
 const int totalUsers = sizeof(users) / sizeof(struct user);
 
-void cureDone(struct user u)
+unsigned long programStart;
+
+void printStats(struct user* u)
 {
-    printf("cure done for user \"%s\" (from %d to %d)\n", u.name, u.arrivalTime, u.arrivalTime + CURE_TIME);
+    printf("cure done for user \"%s\" [arrival:%d] (cure from %d to %d)\n", u->name, u->arrivalTime, u->startCure, u->doneCure);
+}
+
+int getCurrentTime()
+{
+    unsigned long l = ((unsigned long)time(NULL)) - programStart;
+    return l;
 }
 
 sem_t mutex;
 void* userThread(void* arg)
 {
     int ind = *((int*)arg);
-    struct user me = users[ind];
+    struct user* me = &users[ind];
 
-    sleep(me.arrivalTime);
+    sleep(me->arrivalTime);
 
     //wait
     sem_wait(&mutex);
-    printf("after %d %s Entered..\n", me.arrivalTime, me.name);
+    me->startCure = getCurrentTime();
 
     //critical section
     sleep(CURE_TIME);
 
     //signal
-    printf("after %d %s Exited..\n", me.arrivalTime + CURE_TIME, me.name);
-
+    me->doneCure = getCurrentTime();
+    printStats(me);
     sem_post(&mutex);
     return NULL;
 }
@@ -63,7 +74,8 @@ pthread_t* createThreads(int totalUsers)
     return userThreads;
 }
 
-void joinThreads(pthread_t* threadsToJoin, int totalUsers){
+void joinThreads(pthread_t* threadsToJoin, int totalUsers)
+{
     for (int i = 0; i < totalUsers; ++i) {
         pthread_join(threadsToJoin[i], NULL);
     }
@@ -71,12 +83,10 @@ void joinThreads(pthread_t* threadsToJoin, int totalUsers){
 
 int main()
 {
+    programStart = (unsigned long)time(NULL);
     sem_init(&mutex, IS_MULTI_PROCESS, n);
-    
+
     pthread_t* userThreads = createThreads(totalUsers);
-    for (int i = 0; i < totalUsers; ++i) {
-        cureDone(users[i]);
-    }
     joinThreads(userThreads, totalUsers);
 
     sem_destroy(&mutex);

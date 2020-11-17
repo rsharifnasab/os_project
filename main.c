@@ -38,11 +38,15 @@ void printStats(struct user* u)
 {
     if (u->doneCure == 0) {
         // left building
+#if PRESENT
         change_color(COLOR_RED);
+#endif
         printf("cure failed for user \"%s\" [arrival:%d] \n", u->name, u->arrivalTime);
         reset_color();
     } else {
+#if PRESENT
         change_color(COLOR_GREEN);
+#endif
         printf("cure done for user \"%s\" [arrival:%d] (cure from %d to %d)\n", u->name, u->arrivalTime, u->startCure, u->doneCure);
         reset_color();
     }

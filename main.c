@@ -80,24 +80,25 @@ bool takeASeat(struct user* me)
     if (freeSeats == 0) {
         // there is no seat. leave building
         printStats(me);
-        success = false;
-        goto ret;
+
+        sem_post(&seatCountMutex); // unlock seat_count
+        return false;
     } else {
         freeSeats--;
         sem_wait(&seatMutex);
-        success = true;
-        goto ret;
+
+        sem_post(&seatCountMutex); // unlock seat_count
+        return true;
     }
 
-ret:
-    sem_post(&seatCountMutex); // lock seat_count
-    return success;
 }
 
 void goToDrRoom(struct user* me)
 {
+    sem_wait(&seatCountMutex); // lock seat_count
     freeSeats++;
     sem_post(&seatMutex); // ba'd inke vared doctor shodi az jat pasho
+    sem_post(&seatCountMutex); // unlock seat_count
     me->startCure = getCurrentTime();
 }
 

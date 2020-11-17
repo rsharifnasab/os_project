@@ -13,7 +13,6 @@ from random import randint as rnd
 from multiprocessing import Process
 
 EXPECTED_FILES = "./tests"
-TMP_FILES = "./tmp"
 
 def file_name_2_number(file_name):
     name = file_name.split(".")[0]
@@ -29,19 +28,15 @@ def get_last_file_number():
 
 
 def execute(i):
-    print(f"test{i}")
+    print(f"- - - test{i} - - -")
 
-    prog = f"./test{i}"
+    prog = f"./test{i}.out"
     expected = f"{EXPECTED_FILES}/test{i}.txt"
 
-    result = f"{TMP_FILES}/out{i}.tmp"
+    shell(f"{prog}") # > {result}
+    shell(f"echo {expected}")
+    shell(f"cat {expected}")
 
-    shell(f"{prog} > {result}")
-    #print(f"checking {result} and {expected}")
-    assert isfile(result), f"tests{i} doesnt make output"
-    assert cmp(result, expected), f"error in test{i}"
-
-    print(f"passed")
 
 if __name__ == "__main__":
     start_index = 1

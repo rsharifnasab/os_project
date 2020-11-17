@@ -1,35 +1,34 @@
 CC=gcc
-CFLAGS=-lpthread -lrt -O0 -Wall 
+CFLAGS=-lpthread -lrt -O0 -Wall
 
 .DEFAULT_GOAL:=demo
+
+SRCS = $(wildcard *.c)
+EXECS = $(SRCS:%.c=%.out)
+
+DEMO = $(demo.out)
 
 help:
 	@echo "welcome,"
 	@echo "run tests with 'make tests'"
 	@echo "run demo with 'make demo'"
 
-TESTS = $(wildcard test*.c)
-EXECS = $(TESTS:%.c=%)
+%.out: $(SRCS)
+	$(CC) $(CFLAGS) -o $@ $<
+
 compile_test: $(EXECS)
 
 test: clean compile_test
-	@mkdir tmp 
 	@./tester.py || true
-	@rm -r ./tmp || echo "no test folder"
-	
+
 # # # # # # # # # # # # # # #
 
-demo: compile_demo run_demo
-
-compile_demo:
-	@$(CC) demo.c -o demo.out $(CFLAGS)
-run_demo:
+demo: $(DEMO)
 	@./demo.out
 
 # # # # # # # # # # # # # # #
 
 clean:
 	@rm $(EXECS) || true
-	@rm -r tmp || true
 
 

@@ -8,7 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "clui.h"
+#include "lib/clui.h"
 
 #define STR_BUFF_SIZE 200
 #define CURE_TIME 2

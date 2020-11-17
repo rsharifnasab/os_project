@@ -1,19 +1,20 @@
 CC=gcc
-CFLAGS=-lpthread -lrt -O0 -Wall
+CFLAGS=-lpthread -lrt -O0 -Wall -o  %.out
 
 .DEFAULT_GOAL:=demo
 
 help:
-	@echo "welcome, "
+	@echo "welcome,"
 	@echo "run tests with 'make tests'"
 	@echo "run demo with 'make demo'"
 
 TESTS := $(wildcard test*.c)
 COMPILE_TESTS =  $(TESTS:%.c=%.out)
-compile_test: $(compile_tests)
+compile_test: $(COMPILE_TESTS)
 
 tests: compile_test
-	./tester.py
+	@./tester.py || echo "error in tests"
+	@rm -r ./tmp || echo "no test folder"
 	
 # # # # # # # # # # # # # # #
 

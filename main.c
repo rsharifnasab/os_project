@@ -6,6 +6,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "clui.h"
+
 #define STR_BUFF_SIZE 200
 #define CURE_TIME 2
 #define IS_MULTI_PROCESS 0
@@ -36,9 +38,13 @@ void printStats(struct user* u)
 {
     if (u->doneCure == 0) {
         // left building
+        change_color(COLOR_RED);
         printf("cure failed for user \"%s\" [arrival:%d] \n", u->name, u->arrivalTime);
+        reset_color();
     } else {
+        change_color(COLOR_GREEN);
         printf("cure done for user \"%s\" [arrival:%d] (cure from %d to %d)\n", u->name, u->arrivalTime, u->startCure, u->doneCure);
+        reset_color();
     }
 }
 

@@ -6,7 +6,8 @@ CFLAGS=-lpthread -lrt -O0 -Wall
 SRCS = $(wildcard *.c)
 EXECS = $(SRCS:%.c=%.out)
 
-DEMO = $(demo.out)
+DEMO_SRC = $(wildcard demo*.c)
+DEMO_EXE = $(DEMO_SRC:%.c=%.out)
 
 help:
 	@echo "welcome,"
@@ -16,17 +17,13 @@ help:
 %.out: $(SRCS)
 	$(CC) $(CFLAGS) -o $@ $<
 
-compile_test: $(EXECS)
+compile: $(EXECS)
 
-test: clean compile_test
-	@./tester.py || true
+test: compile
+	@./script.py || true
 
-# # # # # # # # # # # # # # #
-
-demo: $(DEMO)
+demo: $(DEMO_EXE)
 	@./demo.out
-
-# # # # # # # # # # # # # # #
 
 clean:
 	@rm $(EXECS) || true

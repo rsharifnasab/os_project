@@ -1,26 +1,30 @@
 CC=gcc
 CFLAGS=-lpthread -lrt -O0 -Wall
 
-PRESENT_MODE=-D PRESENT
-
-.DEFAULT_GOAL:=all
-
-TESTS := $(wildcard test*.c)
+.DEFAULT_GOAL:=demo
 
 help:
-	@echo "welcome"
+	@echo "welcome, "
+	@echo "run tests with 'make tests'"
+	@echo "run demo with 'make demo'"
 
-compile_tests =  $(TESTS:%.c=%.out)
+TESTS := $(wildcard test*.c)
+COMPILE_TESTS =  $(TESTS:%.c=%.out)
+compile_test: $(compile_tests)
 
+tests: compile_test
+	./tester.py
+	
+# # # # # # # # # # # # # # #
 
-#	@$(CC) main.c -o main.out $(CFLAGS) $(PRESENT_MODE)
+demo: compile_demo run_demo
 
-compile: $(compile_tests)
+compile_demo:
+	@$(CC) demo.c -o demo.out $(CFLAGS)
+run_demo:
+	@./demo.out
 
-	#@$(CC) main.c -o main.out $(CFLAGS)
-
-run:
-	@./main.out
+# # # # # # # # # # # # # # #
 
 clean:
 	@rm *.out || true

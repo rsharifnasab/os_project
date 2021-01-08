@@ -35,8 +35,11 @@ unsigned long programStart;
 
 bool colorPrint = false;
 
+sem_t printMutex;
+
 void printStats(struct user* u)
 {
+    sem_wait(&printMutex);
     if (u->doneCure == 0) {
         // left building
         if (colorPrint)
@@ -52,6 +55,7 @@ void printStats(struct user* u)
         if (colorPrint)
             reset_color();
     }
+    sem_post(&printMutex);
 }
 
 int getCurrentTime()
@@ -81,9 +85,8 @@ void joinThreads(struct user* users, int totalUsers)
 
 void initialize_doctors(char*** doctors, int n)
 {
-    *doctors = (char**) calloc(n, sizeof(char*));
+    *doctors = (char**)calloc(n, sizeof(char*));
 }
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -111,12 +114,12 @@ bool takeASeat(struct user* me)
     }
 }
 
-int getFreeDoctor(struct user *me)
+int getFreeDoctor(struct user* me)
 {
     int ans = -1;
     sem_wait(&doctorArrMutex);
     for (int i = 0; i < n; ++i) {
-        if(doctors[i] == NULL){ // ok we can go to this doctor
+        if (doctors[i] == NULL) { // ok we can go to this doctor
             ans = i;
             goto ret;
         }
@@ -198,6 +201,7 @@ void run()
     sem_init(&doctorMutex, IS_MULTI_PROCESS, n);
     sem_init(&doctorArrMutex, IS_MULTI_PROCESS, 1);
 
+    sem_init(&printMutex, IS_MULTI_PROCESS, 1);
 
     programStart = (unsigned long)time(NULL);
 

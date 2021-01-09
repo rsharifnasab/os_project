@@ -1,7 +1,7 @@
 #include "core.h"
-extern struct user users[];
 
 char** doctors;
+struct user* users;
 int n;
 
 unsigned long long programStart;
@@ -168,7 +168,7 @@ void handleArrival(struct user* me)
 void* userThread(void* arg)
 {
     int ind = *((int*)arg);
-    struct user* me = &users[ind];
+    struct user* me = users +ind;
     handleArrival(me);
 
     if (!takeASeat(me)) {
@@ -183,12 +183,13 @@ void* userThread(void* arg)
     return NULL;
 }
 
-void run(int m, int n, struct user users[], int usersCount)
+void run(int m, int n, struct user usersArr[], int usersCount)
 {
 
     colorPrint = isatty(fileno(stdout));
 
     // initialize
+    users = usersArr;
     initialize_doctors(&doctors, n);
     freeSeats = m;
 

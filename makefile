@@ -1,17 +1,18 @@
+
 CC=gcc
 CFLAGS=-lpthread -lrt -O0 -Wall
 
 .DEFAULT_GOAL:=demo
 
-SRCS = $(wildcard *.c)
-EXECS = $(SRCS:%.c=%.out)
+SRCS = $(wildcard src/*.c)
+EXECS = $(SRCS:%.c=bin/%.out)
 
 DEMO_SRC = $(wildcard demo*.c)
 DEMO_EXE = $(DEMO_SRC:%.c=%.out)
 
 help:
 	@echo "welcome,"
-	@echo "run tests with 'make tests'"
+	@echo "run tests with 'make test'"
 	@echo "run demo with 'make demo'"
 
 %.out: $(SRCS)

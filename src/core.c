@@ -17,7 +17,7 @@ void change_print_color(int r, int g, int b)
 
 void reset_print_color()
 {
-    printf("[0m");
+    printf("\033[0m");
 }
 
 void printStats(struct user* u)

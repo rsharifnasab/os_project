@@ -2,3 +2,7 @@
 *.out
 *.zip
 tmp
+bin
+obj
+debug
+

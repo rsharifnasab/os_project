@@ -1,32 +1,69 @@
+# tool macros
+CC := gcc 
+CCFLAGS := -Wall -Wextra
+DBGFLAGS := -g
+LIBS := -lpthread
+CCOBJFLAGS := $(CCFLAGS) -c
 
-CC=gcc
-CFLAGS=-lpthread -lrt -O0 -Wall
+# path macros
+BIN_PATH := bin
+OBJ_PATH := obj
+SRC_PATH := src
+DBG_PATH := debug
 
-.DEFAULT_GOAL:=demo
+# compile macros
+TARGET_NAME := demo
+ifeq ($(OS),Windows_NT)
+	TARGET_NAME := $(addsuffix .exe,$(TARGET_NAME))
+endif
+TARGET := $(BIN_PATH)/$(TARGET_NAME)
+TARGET_DEBUG := $(DBG_PATH)/$(TARGET_NAME)
 
-SRCS = $(wildcard src/*.c)
-EXECS = $(SRCS:%.c=bin/%.out)
+# src files & obj files
+SRC := $(foreach x, $(SRC_PATH), $(wildcard $(addprefix $(x)/*,.c*)))
+OBJ := $(addprefix $(OBJ_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
+OBJ_DEBUG := $(addprefix $(DBG_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
 
-DEMO_SRC = $(wildcard demo*.c)
-DEMO_EXE = $(DEMO_SRC:%.c=%.out)
+# clean files list
+DISTCLEAN_LIST := $(OBJ) \
+                  $(OBJ_DEBUG)
+CLEAN_LIST := $(TARGET) \
+			  $(TARGET_DEBUG) \
+			  $(DISTCLEAN_LIST)
 
-help:
-	@echo "welcome,"
-	@echo "run tests with 'make test'"
-	@echo "run demo with 'make demo'"
+# default rule
+default: makedir all
 
-%.out: $(SRCS)
-	$(CC) $(CFLAGS) -o $@ $*.c
+# non-phony targets
+$(TARGET): $(OBJ)
+	$(CC) $(CCFLAGS)  $(LIBS) -o $@ $(OBJ)
 
-compile: $(EXECS)
+$(OBJ_PATH)/%.o: $(SRC_PATH)/%.c*
+	$(CC) $(CCOBJFLAGS) -o $@ $<
 
-test: compile
-	@./script.py || true
+$(DBG_PATH)/%.o: $(SRC_PATH)/%.c*
+	$(CC) $(CCOBJFLAGS) $(DBGFLAGS) -o $@ $<
 
-demo: $(DEMO_EXE)
-	@./demo.out
+$(TARGET_DEBUG): $(OBJ_DEBUG)
+	$(CC) $(CCFLAGS) $(DBGFLAGS) $(OBJ_DEBUG) -o $@
 
+# phony rules
+.PHONY: makedir
+makedir:
+	@mkdir -p $(BIN_PATH) $(OBJ_PATH) $(DBG_PATH)
+
+.PHONY: all
+all: $(TARGET)
+
+.PHONY: debug
+debug: $(TARGET_DEBUG)
+
+.PHONY: clean
 clean:
-	@rm $(EXECS) || true
+	@echo CLEAN $(CLEAN_LIST)
+	@rm -f $(CLEAN_LIST)
 
-.PHONY=clean. demo, test. help
+.PHONY: distclean
+distclean:
+	@echo CLEAN $(DISTCLEAN_LIST)
+	@rm -f $(DISTCLEAN_LIST)

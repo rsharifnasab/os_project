@@ -1,4 +1,0 @@
-cure done for user "user3" [arrival:2] (cure from 2 to 4)
-cure done for user "user4" [arrival:4] (cure from 4 to 6)
-cure done for user "user1" [arrival:15] (cure from 15 to 17)
-cure done for user "user2" [arrival:15] (cure from 15 to 17)
